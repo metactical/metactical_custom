@@ -1,0 +1,82 @@
+.list-item__content{
+	display: block;
+}
+
+th {
+  /*background-color: orange;*/
+  color: white;
+}
+
+tr:nth-child(even) {background-color: #f2f2f2;}
+tr:hover {background-color: #f5f5f5;}
+th, td {
+  border-bottom: 1px solid #ddd;
+}
+th, td {
+  padding: 5px;
+  text-align: left;
+}
+
+.readonly{
+	pointer-events: none;
+	background: #d4d4d4;
+}
+
+@media print {
+    table{
+    	width: 100% !important;
+    }
+}
+
+.row.first-row-fields {
+    margin-top: -20px !important;
+}
+
+.fields_group{
+	margin-bottom: -20px !important;
+}
+
+i.fa.fa-trash.remove-item, i.fa.fa-eye.show_details, i.fa.fa-trash.remove_supended_invoice{
+	cursor: pointer;
+}
+
+.msgprint-dialog .modal-content {
+    width: 500px !important;
+}
+
+.tableFixHead {
+	margin-top: -20px !important;
+	overflow-y: auto;
+	height: 295px;
+}
+.tableFixHead thead th {
+	position: sticky;
+	top: 0;
+}
+table {
+	border-collapse: collapse;
+	width: 100%;
+}
+th,
+td {
+	padding: 8px 16px;
+	border: 1px solid #ccc;
+}
+
+.aagekaro{
+	z-index: 99;
+}
+
+.toggle{
+	margin-top:20px;
+	width: 100% !important;
+}
+
+.toggle-off{
+	background: red !important;
+	color:white !important;
+}
+
+button.quantity-left-minus.btn.btn-danger.btn-number, button.quantity-right-plus.btn.btn-success.btn-number{
+	padding:0px !important;
+}

@@ -1,0 +1,23 @@
+{
+ "content": null,
+ "creation": "2021-02-01 14:18:31.316910",
+ "docstatus": 0,
+ "doctype": "Page",
+ "idx": 0,
+ "modified": "2021-02-01 14:19:05.415135",
+ "modified_by": "Administrator",
+ "module": "Metactical Custom",
+ "name": "smart-pos",
+ "owner": "Administrator",
+ "page_name": "smart-pos",
+ "roles": [
+  {
+   "role": "System Manager"
+  }
+ ],
+ "script": null,
+ "standard": "Yes",
+ "style": null,
+ "system_page": 0,
+ "title": "Smart POS"
+}
