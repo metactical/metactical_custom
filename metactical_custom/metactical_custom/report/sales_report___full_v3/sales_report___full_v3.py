@@ -27,9 +27,24 @@ def execute(filters=None):
 		row["ifw_retailskusuffix"] = i.get("ifw_retailskusuffix")
 		row["item_name"] = i.get("item_name")
 		row["item_code"] = i.get("item_code")
+
+		row["ifw_duty_rate"] = i.get("ifw_duty_rate")
+		row["ifw_discontinued"] = i.get("ifw_discontinued")
+		row["ifw_product_name_ci"] = i.get("ifw_product_name_ci")
+		row["ifw_item_notes"] = i.get("ifw_item_notes")
+		row["ifw_item_notes2"] = i.get("ifw_item_notes2")
+		row["ifw_po_notes"] = i.get("ifw_po_notes")
+		row["country_of_origin"] = i.get("country_of_origin")
+		row["customs_tariff_number"] = i.get("customs_tariff_number")
+
 		row["supplier_sku"] = i.get("supplier_part_no")
+		
 		row["supplier_name"] = i.get("supplier")
+		
 		row["barcode"] = frappe.db.get_value("Item Barcode", {"parent": i.get("item_code")}, "barcode")
+
+		row["item_image"] =  "<a target="+str("_blank")+" href = "+str(i.get("image"))+"> "+str(i.get("image"))+" </a>"   
+
 		row["rate"] = get_item_details(i.get("item_code"), "Selling")
 		row["item_discontinued"] = i.get("disabled")
 		row["date_last_received"] = get_date_last_received(i.get("item_code"), i.get("supplier"))
@@ -50,6 +65,8 @@ def execute(filters=None):
 		expected_pos = get_purchase_orders(i.get("item_code"), i.get("supplier"))
 		row["expected_pos"] = expected_pos
 		row["po_eta"] = expected_pos
+		ordered_qty = get_open_po_qty(i.get("item_code"), i.get("supplier"))
+		row["ordered_qty"] = ordered_qty or 0.0
 		row["last_sold_date"] = get_date_last_sold(i.get("item_code"))
 		sales_data = get_total_sold(i.get("item_code"))
 		row["previous_year_sale"] = 0
@@ -130,6 +147,65 @@ def get_column(filters,conditions):
 				"fieldtype": "Data",
 				"width": 300,
 			},
+
+			{
+				"label": _("ItemImage"),
+				"fieldname": "item_image",
+				"fieldtype": "Data",
+				"width": 200,
+			},
+			{
+				"label": _("Duty rate"),
+				"fieldname": "ifw_duty_rate",
+				"fieldtype": "Float",
+				"width": 100,
+			},
+			{
+				"label": _("Discontinued"),
+				"fieldname": "ifw_discontinued",
+				"fieldtype": "Check",
+				"width": 100,
+			},
+			{
+				"label": _("ProductNameCI"),
+				"fieldname": "ifw_product_name_ci",
+				"fieldtype": "Data",
+				"width": 100,
+			},
+			
+			{
+				"label": _("Item Notes"),
+				"fieldname": "ifw_item_notes",
+				"fieldtype": "Data",
+				"width": 100,
+			},
+			{
+				"label": _("Item Notes2"),
+				"fieldname": "ifw_item_notes2",
+				"fieldtype": "Data",
+				"width": 100,
+			},
+			{
+				"label": _("PONotes"),
+				"fieldname": "ifw_po_notes",
+				"fieldtype": "Data",
+				"width": 100,
+			},
+			{
+				"label": _("Country of Origin"),
+				"fieldname": "country_of_origin",
+				"fieldtype": "Link",
+				"options": "Country",
+				"width": 100,
+			},
+			{
+				"label": _("HS Code"),
+				"fieldname": "customs_tariff_number",
+				"fieldtype": "Link",
+				"options": "Customs Tariff Number",
+				"width": 100,
+			},
+
 			{
 				"label": _("Tags"),
 				"fieldname": "tag",
@@ -253,6 +329,12 @@ def get_column(filters,conditions):
 				"width": 200,
 			},
 			{
+				"label": _("OrderedQty"),
+				"fieldname": "ordered_qty",
+				"fieldtype": "Float",
+				"width": 120,
+			},
+			{
 				"label": _("PreviousYSale"),
 				"fieldname": "previous_year_sale",
 				"fieldtype": "Int",
@@ -271,7 +353,7 @@ def get_column(filters,conditions):
 				"width": 140,
 			}]
 	today = getdate(nowdate())
-	last_month = getdate(str(datetime(today.year-1, 1,1)))
+	last_month = getdate(str(datetime(today.year-1, today.month,1)))
 	while last_month <= today:
 		month = last_month.strftime("%B")
 		columns.append({
@@ -312,8 +394,10 @@ def get_column(filters,conditions):
 
 
 def get_master(conditions="", filters={}):
-	data = frappe.db.sql("""select  i.ifw_retailskusuffix, i.item_code, i.item_name,
-			s.supplier, s.supplier_part_no, i.disabled
+	data = frappe.db.sql("""select  i.ifw_retailskusuffix, i.item_code, i.item_name, i.image,
+			s.supplier, s.supplier_part_no, i.disabled, country_of_origin,customs_tariff_number,
+			ifw_duty_rate,ifw_discontinued,ifw_product_name_ci,ifw_item_notes,ifw_item_notes2,
+			ifw_po_notes
 			from `tabItem Supplier` s inner join `tabItem` i on i.name = s.parent
 			where 1 = 1 %s
 		"""%(conditions), filters, as_dict=1)
@@ -391,10 +475,21 @@ def get_purchase_orders(item,supplier):
 	output = ""
 	data = frappe.db.sql("""select p.name, c.qty, c.schedule_date from `tabPurchase Order` p inner join 
 		`tabPurchase Order Item` c on p.name = c.parent where p.docstatus=1 and c.item_code = %s
+		and c.received_qty < c.qty
 		 and p.supplier = %s""",(item, supplier))
 	for d in data:
 		output += d[0]+" ("+str(d[1])+")("+str(getdate(d[2]).strftime("%d-%b-%Y"))+"),"
 	return output
+
+def get_open_po_qty(item,supplier):
+	output = ""
+	data = frappe.db.sql("""select SUM(c.qty) - SUM(c.received_qty) from `tabPurchase Order` p inner join 
+		`tabPurchase Order Item` c on p.name = c.parent where p.docstatus=1 and c.item_code = %s
+		and c.received_qty < c.qty
+		 and p.supplier = %s""",(item, supplier))
+	if data:
+		return data[0][0]
+	return 0
 
 @frappe.whitelist()
 def get_item_details(item, list_type="Selling", supplier=None):

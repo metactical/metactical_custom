@@ -2,7 +2,7 @@
 // For license information, please see license.txt
 /* eslint-disable */
 
-frappe.query_reports["Sales Report - Full V2"] = {
+frappe.query_reports["Sales Report - Full V3"] = {
 	"filters": [
 		{
 			"fieldname":"supplier",
