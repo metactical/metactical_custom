@@ -46,7 +46,7 @@ def execute(filters=None):
 		row["item_image"] =  "<a target="+str("_blank")+" href = "+str(i.get("image"))+"> "+str(i.get("image"))+" </a>"   
 
 		row["rate"] = get_item_details(i.get("item_code"), "Selling")
-		row["item_discontinued"] = i.get("disabled")
+		# row["item_discontinued"] = i.get("disabled")
 		row["date_last_received"] = get_date_last_received(i.get("item_code"), i.get("supplier"))
 		row["item_cost"] = get_item_details(i.get("item_code"), "Buying", i.get("supplier"))
 		
@@ -64,7 +64,7 @@ def execute(filters=None):
 		row["tag"] = get_tags(i.get("item_code"))
 		expected_pos = get_purchase_orders(i.get("item_code"), i.get("supplier"))
 		row["expected_pos"] = expected_pos
-		row["po_eta"] = expected_pos
+		row["po_eta"] = get_last_purchase_orders(i.get("item_code"), i.get("supplier"))
 		ordered_qty = get_open_po_qty(i.get("item_code"), i.get("supplier"))
 		row["ordered_qty"] = ordered_qty or 0.0
 		row["last_sold_date"] = get_date_last_sold(i.get("item_code"))
@@ -218,13 +218,13 @@ def get_column(filters,conditions):
 				"fieldtype": "Currency",
 				"width": 100,
 			},
-			{
-				"label": _("Discointinued"),
-				"fieldname": "item_discontinued",
-				"fieldtype": "Boolean",
-				"width": 100,
-				"default": False,
-			},
+			# {
+			# 	"label": _("Discointinued"),
+			# 	"fieldname": "item_discontinued",
+			# 	"fieldtype": "Boolean",
+			# 	"width": 100,
+			# 	"default": False,
+			# },
 			{
 				"label": _("ETA"),
 				"fieldname": "eta",
@@ -473,19 +473,31 @@ def get_tags(item):
 
 def get_purchase_orders(item,supplier):
 	output = ""
-	data = frappe.db.sql("""select p.name, c.qty, c.schedule_date from `tabPurchase Order` p inner join 
+	data = frappe.db.sql("""select p.name, c.qty-c.received_qty, c.schedule_date from `tabPurchase Order` p inner join 
 		`tabPurchase Order Item` c on p.name = c.parent where p.docstatus=1 and c.item_code = %s
-		and c.received_qty < c.qty
+		and c.received_qty < c.qty and p.status in ("To Receive and Bill", "To Receive")
 		 and p.supplier = %s""",(item, supplier))
 	for d in data:
-		output += d[0]+" ("+str(d[1])+")("+str(getdate(d[2]).strftime("%d-%b-%Y"))+"),"
+		# output += d[0]+" ("+str(d[1])+")("+str(getdate(d[2]).strftime("%d-%b-%Y"))+"),"
+		output += d[0]+" ("+str(d[1])+"), "
+	return output
+
+def get_last_purchase_orders(item,supplier):
+	output = ""
+	data = frappe.db.sql("""select p.name, c.qty-c.received_qty, c.schedule_date from `tabPurchase Order` p inner join 
+		`tabPurchase Order Item` c on p.name = c.parent where p.docstatus=1 and c.item_code = %s
+		and c.received_qty < c.qty and p.status in ("To Receive and Bill", "To Receive")
+		 and p.supplier = %s order by c.schedule_date desc limit 1""",(item, supplier))
+	for d in data:
+		output = d[0]+" ("+str(getdate(d[2]).strftime("%d-%b-%Y"))+")"
+		# output = d[0]+" ("+str(d[1])+")"
 	return output
 
 def get_open_po_qty(item,supplier):
 	output = ""
 	data = frappe.db.sql("""select SUM(c.qty) - SUM(c.received_qty) from `tabPurchase Order` p inner join 
 		`tabPurchase Order Item` c on p.name = c.parent where p.docstatus=1 and c.item_code = %s
-		and c.received_qty < c.qty
+		and c.received_qty < c.qty and  p.status in ("To Receive and Bill", "To Receive")
 		 and p.supplier = %s""",(item, supplier))
 	if data:
 		return data[0][0]
