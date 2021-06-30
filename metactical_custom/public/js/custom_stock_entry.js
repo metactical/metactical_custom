@@ -2,16 +2,16 @@ frappe.ui.form.on('Stock Entry', {
 	refresh(frm) {
         var target = frm.doc.items[0].t_warehouse;
         var warehouses = {
-                    "R01-Gor-ReceivedStock - ICL": "R01-Gor-Active Stock - ICL",
-                    "R02-Edm-ReceivedStock - ICL": "R02-Edm-Active Stock - ICL",
-                    "R03-Vic-ReceivedStock - ICL": "R03-Vic-Active Stock - ICL",
-                    "R04-Mon-ReceivedStock - ICL": "R04-Mon-Active Stock - ICL",
-                    "R05-DTN-ReceivedStock - ICL": "R05-DTN-Active Stock - ICL",
-                    "R06-AMB-ReceivedStock - ICL": "R06-AMB-Active Stock - ICL",
-                    "R07-Queen-ReceivedStock - ICL": "R07-Queen-Active Stock - ICL",
-                    "W01-WHS-ReceivedStock - ICL": "W01-WHS-Active Stock - ICL",
+                    "R01-Gor-InTransit Stock - ICL": "R01-Gor-Active Stock - ICL",
+                    "R02-Edm-InTransit Stock - ICL": "R02-Edm-Active Stock - ICL",
+                    "R03-Vic-InTransit Stock - ICL": "R03-Vic-Active Stock - ICL",
+                    "R04-Mon-InTransit Stock - ICL": "R04-Mon-Active Stock - ICL",
+                    "R05-DTN-InTransit Stock - ICL": "R05-DTN-Active Stock - ICL",
+                    "R06-AMB-InTransit Stock - ICL": "R06-AMB-Active Stock - ICL",
+                    "R07-Queen-InTransit Stock - ICL": "R07-Queen-Active Stock - ICL",
+                    "W01-WHS-InTransit Stock - ICL": "W01-WHS-Active Stock - ICL",
                 }
-        if(target.includes("ReceivedStock")){
+        if(target.includes("ReceivedStock") || target.includes("InTransit")){
     	    if(frm.doc.docstatus == 1 && frm.doc.stock_entry_type == "Material Transfer"){
         	    frm.add_custom_button(__('Receive Stock'), function() {
         	        var new_item = frappe.model.copy_doc(frm.doc);
