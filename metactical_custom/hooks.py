@@ -82,6 +82,9 @@ doctype_js = {"Stock Entry" : "public/js/custom_stock_entry.js"}
 doc_events = {
 	"Stock Entry": {
 		"before_submit": "metactical_custom.doctype_changes.stock_entry_before_submit",
+	},
+	"Purchase Receipt": {
+		"validate": "metactical_custom.doctype_changes.purchase_receipt_validate",
 	}
 }
 
