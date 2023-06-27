@@ -11,12 +11,14 @@ import xlrd
 import frappe
 from pathlib import Path
 from frappe.utils.background_jobs import enqueue
+from frappe.utils import cstr
 
 
 class UploadImages(Document):	
 	
 	def on_submit(self):
-		msystem_path = "site1.local"
+		#msystem_path = "site1.local"
+		msystem_path = cstr(frappe.local.site)
 		file_attachment = self.attachment
 		file_path  = msystem_path + file_attachment
 		df = pd.read_excel(r""+file_path)
